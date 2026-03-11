@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-const API_BASE = 'https://parkisense-zcub.onrender.com/'
+const API_BASE = 'https://parkisense-zcub.onrender.com'
 
 function Login({ onLoginSuccess }) {
   const [username, setUsername] = useState('')
@@ -118,4 +118,5 @@ function Login({ onLoginSuccess }) {
 }
 
 export default Login
+
 
