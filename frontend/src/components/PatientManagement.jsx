@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 
-const API_BASE = 'http://localhost:8000'
+const API_BASE = 'https://parkisense-zcub.onrender.com'
 
 function PatientManagement({ doctorName, doctorId, onStartAssessment }) {
   const [patients, setPatients] = useState([])
@@ -331,3 +331,4 @@ function PatientManagement({ doctorName, doctorId, onStartAssessment }) {
 }
 
 export default PatientManagement
+
