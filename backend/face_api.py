@@ -11,6 +11,7 @@ logger = logging.getLogger("face_api")
 
 # MediaPipe Face Mesh initialization
 mp_face_mesh = mp.solutions.face_mesh
+FaceMesh = mp_face_mesh.FaceMesh
 face_mesh = mp_face_mesh.FaceMesh(
     static_image_mode=False,
     max_num_faces=1,
