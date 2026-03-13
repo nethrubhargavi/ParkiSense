@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-const API_BASE = 'http://localhost:8000'
+const API_BASE = 'https://parkisense-zcub.onrender.com'
 
 const RELATION_OPTIONS = [
   { value: 'mother', label: '👩 Mother' },
@@ -315,3 +315,4 @@ function FamilyHistory({ patientId, onSaveSuccess }) {
 }
 
 export default FamilyHistory
+
