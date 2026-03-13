@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react'
 
+const API_BASE = 'https://parkisense-zcub.onrender.com'
+
 /* ──── helpers ──── */
 function formatFileSize(bytes) {
   if (!bytes) return ''
@@ -259,3 +261,4 @@ export default function MedicalReports() {
     </div>
   )
 }
+
