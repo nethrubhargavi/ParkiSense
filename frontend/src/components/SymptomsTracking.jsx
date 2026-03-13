@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-const API_BASE = 'http://localhost:8000'
+const API_BASE = 'https://parkisense-zcub.onrender.com'
 
 const SYMPTOM_OPTIONS = [
   { id: 'resting-tremor', label: 'Resting Tremor', icon: '🤝' },
@@ -312,3 +312,4 @@ function SymptomsTracking({ patientId, onSaveSuccess }) {
 }
 
 export default SymptomsTracking
+
