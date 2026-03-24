@@ -1740,119 +1740,31 @@ body {
 
 
 
-/* ========== MEDICAL REPORTS — CATEGORISED SECTIONS ========== */
-
+/* Medical Reports styles */
 .reports-container {
-  max-width: 960px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
-.reports-container > h2 {
+.reports-container h2 {
   margin-bottom: 0.25rem;
-  color: #2c3e50;
 }
 
-.reports-container > p {
+.reports-container p {
   color: #666;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
-/* ── category section card ── */
-.report-category-section {
-  background: #fff;
-  border-radius: 10px;
-  margin-bottom: 1.25rem;
-  border-left: 5px solid var(--cat-accent, #667eea);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
-  transition: box-shadow 0.3s;
-}
-
-.report-category-section:hover {
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.10);
-}
-
-/* ── header (clickable to collapse) ── */
-.section-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  width: 100%;
-  padding: 1rem 1.25rem;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
-  text-align: left;
-  transition: background-color 0.2s;
-}
-
-.section-header:hover {
-  background-color: rgba(0, 0, 0, 0.02);
-}
-
-.section-icon {
-  font-size: 1.5rem;
-}
-
-.section-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #2c3e50;
-  flex: 1;
-}
-
-.file-count-badge {
-  background: var(--cat-accent, #667eea);
-  color: #fff;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.15rem 0.55rem;
-  border-radius: 9999px;
-  min-width: 22px;
-  text-align: center;
-}
-
-.collapse-chevron {
-  font-size: 1rem;
-  color: #999;
-  transition: transform 0.2s;
-}
-
-/* ── body ── */
-.section-body {
-  padding: 0 1.25rem 1.25rem;
-  animation: fadeSectionIn 0.25s ease;
-}
-
-@keyframes fadeSectionIn {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.section-desc {
-  color: #888;
-  font-size: 0.88rem;
-  margin-bottom: 0.75rem;
-}
-
-/* ── drop zone ── */
 .drop-area {
   border: 2px dashed #cbd5e1;
   padding: 1.5rem;
   border-radius: 8px;
-  background: #fafbfc;
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   position: relative;
-  transition: border-color 0.2s, background 0.2s;
-}
-
-.drop-area:hover {
-  border-color: var(--cat-accent, #667eea);
-  background: #f0f4ff;
 }
 
 .drop-area input[type=file] {
@@ -1865,9 +1777,8 @@ body {
   cursor: pointer;
 }
 
-/* ── file list ── */
 .files-list {
-  margin-top: 0.75rem;
+  margin-top: 1rem;
 }
 
 .file-row {
@@ -1875,9 +1786,9 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem 0.75rem;
-  background: #f9fafb;
+  background: #fff;
   border-radius: 6px;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.5rem;
   border: 1px solid #eef2f7;
 }
 
@@ -1891,15 +1802,13 @@ body {
   color: #777;
 }
 
-/* ── actions ── */
 .actions {
-  margin-top: 0.75rem;
+  margin-top: 1rem;
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-/* ── progress bar ── */
 .progress-bar {
   height: 8px;
   width: 200px;
@@ -1915,28 +1824,21 @@ body {
   transition: width 300ms ease;
 }
 
-/* ── results ── */
 .results-area {
-  margin-top: 1rem;
+  margin-top: 1.5rem;
 }
 
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .card {
-  background: #f9fafb;
+  background: #fff;
   padding: 1rem;
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(16, 24, 40, 0.04);
-}
-
-.card h3 {
-  font-size: 0.95rem;
-  margin-bottom: 0.5rem;
-  color: #2c3e50;
+  box-shadow: 0 4px 8px rgba(16,24,40,0.04);
 }
 
 .muted {
@@ -1950,17 +1852,442 @@ body {
   border-radius: 6px;
 }
 
-/* ── responsive ── */
-@media (max-width: 600px) {
-  .section-header {
-    padding: 0.75rem 1rem;
+/* ========== SUMMARY REPORT STYLES ========== */
+
+.summary-report-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.report-loading {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e0e0e0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Report Header */
+.report-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.report-title-area h2 {
+  font-size: 1.6rem;
+  margin-bottom: 0.3rem;
+}
+
+.report-subtitle {
+  opacity: 0.9;
+  font-size: 0.95rem;
+}
+
+.report-meta {
+  text-align: right;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.report-meta p {
+  margin: 0.2rem 0;
+}
+
+/* Report Sections */
+.report-section {
+  background: white;
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #eef0f5;
+  transition: box-shadow 0.2s;
+}
+
+.report-section:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.09);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #f0f0f5;
+}
+
+.section-header h3 {
+  font-size: 1.15rem;
+  color: #2c3e50;
+  margin: 0;
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 0.3rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-badge.completed {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-badge.pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+/* Patient Info Grid */
+.patient-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.info-label {
+  font-size: 0.78rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.info-value {
+  font-size: 1.05rem;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+/* Risk Indicator */
+.risk-indicator-container {
+  text-align: center;
+}
+
+.risk-gauge {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1.5rem 2.5rem;
+  border: 4px solid;
+  border-radius: 16px;
+  margin-bottom: 1rem;
+  background: white;
+}
+
+.risk-score {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.risk-label {
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.risk-bar-track {
+  width: 100%;
+  max-width: 400px;
+  height: 10px;
+  background: #e9ecef;
+  border-radius: 5px;
+  margin: 0 auto 1rem;
+  overflow: hidden;
+}
+
+.risk-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 1s ease-out;
+}
+
+.risk-disclaimer {
+  font-size: 0.85rem;
+  color: #856404;
+  background: #fff3cd;
+  padding: 0.65rem 1rem;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+/* Report Metric Grid */
+.report-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.report-metric {
+  background: #f8f9fc;
+  padding: 0.85rem;
+  border-radius: 8px;
+  border-left: 3px solid #667eea;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.report-metric-label {
+  font-size: 0.75rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-weight: 600;
+}
+
+.report-metric-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+/* Report Interpretation */
+.report-interpretation {
+  background: #e8f4f8;
+  border-left: 4px solid #17a2b8;
+  padding: 0.85rem 1rem;
+  border-radius: 4px;
+  color: #155e62;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Section Content */
+.section-content {
+  padding: 0;
+}
+
+.record-block {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.record-block:last-child {
+  border-bottom: none;
+}
+
+.positive-text {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.negative-text {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.family-members-summary ul {
+  margin: 0.5rem 0 0 1.25rem;
+  color: #495057;
+}
+
+.family-members-summary li {
+  padding: 0.2rem 0;
+}
+
+.record-notes {
+  margin-top: 0.5rem;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Symptoms Summary Grid */
+.symptoms-summary-grid {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.symptom-summary-item {
+  display: grid;
+  grid-template-columns: 200px 1fr 50px;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.symptom-name {
+  font-size: 0.9rem;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.severity-bar-mini {
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.severity-fill-mini {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.severity-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #495057;
+  text-align: right;
+}
+
+/* No Data */
+.no-data-text {
+  color: #6c757d;
+  font-style: italic;
+  padding: 0.5rem 0;
+}
+
+/* Test Timestamp */
+.test-timestamp {
+  font-size: 0.8rem;
+  color: #adb5bd;
+  margin-top: 0.5rem;
+}
+
+.reference-note {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
+/* Medical Summary Block */
+.medical-summary-block {
+  margin-bottom: 1rem;
+}
+
+.medical-summary-block h4 {
+  font-size: 0.95rem;
+  color: #2c3e50;
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.medical-summary-block ul {
+  margin: 0.3rem 0 0 1.25rem;
+  color: #495057;
+}
+
+.medical-summary-block li {
+  padding: 0.2rem 0;
+  font-size: 0.92rem;
+}
+
+/* Report Actions */
+.report-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin: 2rem 0;
+  flex-wrap: wrap;
+}
+
+.print-btn {
+  min-width: 200px;
+}
+
+/* Report Footer Disclaimer */
+.report-footer-disclaimer {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-top: 1rem;
+  font-size: 0.88rem;
+  color: #495057;
+}
+
+.report-footer-disclaimer p {
+  margin: 0.4rem 0;
+}
+
+.report-generated-by {
+  font-size: 0.8rem;
+  color: #adb5bd;
+  text-align: center;
+  margin-top: 0.75rem !important;
+}
+
+/* ========== PRINT STYLES ========== */
+@media print {
+  body {
+    background: white;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
-  .section-body {
-    padding: 0 1rem 1rem;
+  .navbar,
+  .assessment-top-bar,
+  .app-header,
+  .app-footer,
+  .page-navigation,
+  .no-print {
+    display: none !important;
   }
 
-  .cards {
-    grid-template-columns: 1fr;
+  .app-main {
+    padding: 0;
+    max-width: 100%;
+  }
+
+  .page-content {
+    box-shadow: none;
+    padding: 0;
+  }
+
+  .report-section {
+    box-shadow: none;
+    break-inside: avoid;
+    border: 1px solid #ddd;
+  }
+
+  .report-header {
+    background: #667eea !important;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .risk-gauge {
+    border-width: 3px;
+  }
+
+  .report-footer-disclaimer {
+    break-inside: avoid;
   }
 }
