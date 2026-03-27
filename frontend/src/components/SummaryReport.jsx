@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 
-const API_BASE = 'https://parkisense-zcub.onrender.com'
+const API_BASE = 'http://localhost:8000'
 
 function SummaryReport({ patientId, patientName }) {
   const [patientData, setPatientData] = useState(null)
