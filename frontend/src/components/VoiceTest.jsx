@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react'
 
-const API_BASE = 'https://parkisense-zcub.onrender.com'
+const API_BASE = 'http://localhost:8000'
 
 function VoiceTest() {
   const [isRecording, setIsRecording] = useState(false)
@@ -149,15 +149,18 @@ function VoiceTest() {
       
       if (data.status === 'success') {
         // Parse metrics from response
-        setResults({
+        const parsed = {
           jitter: data.jitter || 'N/A',
           shimmer: data.shimmer || 'N/A',
           f0_mean: data.f0_mean || 'N/A',
           confidence: data.confidence || 'N/A',
           interpretation: data.clinical_interpretation || 'Analysis complete',
           status: 'success'
-        })
+        }
+        setResults(parsed)
         setStatus('Analysis complete')
+        // Persist for Summary Report
+        localStorage.setItem('lastVoiceResults', JSON.stringify({ ...parsed, timestamp: new Date().toISOString() }))
       } else {
         setStatus('Analysis failed: ' + (data.message || 'Unknown error'))
         setResults({
@@ -277,3 +280,4 @@ function VoiceTest() {
 }
 
 export default VoiceTest
+
