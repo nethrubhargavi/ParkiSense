@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 
-const API_BASE = 'https://parkisense-zcub.onrender.com'
+const API_BASE = 'http://localhost:8000'
 
 function FaceAssessment() {
   const [cameraActive, setCameraActive] = useState(false)
@@ -170,6 +170,8 @@ function FaceAssessment() {
       if (data.status === 'success') {
         setResults(data)
         setStatus('Analysis complete')
+        // Persist for Summary Report
+        localStorage.setItem('lastFaceResults', JSON.stringify({ ...data, timestamp: new Date().toISOString() }))
       } else {
         setStatus('Analysis failed')
         setResults(data)
@@ -308,3 +310,4 @@ function FaceAssessment() {
 }
 
 export default FaceAssessment
+
