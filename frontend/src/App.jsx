@@ -8,6 +8,7 @@ import VoiceTestPage from './pages/VoiceTestPage'
 import FaceAssessmentPage from './pages/FaceAssessmentPage'
 import SymptomsTrackingPage from './pages/SymptomsTrackingPage'
 import MedicalReportsPage from './pages/MedicalReportsPage'
+import SummaryReportPage from './pages/SummaryReportPage'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -15,7 +16,7 @@ function App() {
   const [currentView, setCurrentView] = useState('dashboard') // 'dashboard' or 'assessment'
   const [selectedPatient, setSelectedPatient] = useState(null)
   
-  const pages = ['family-history', 'symptoms', 'hand-tremor', 'voice-test', 'face-assessment', 'medical-reports']
+  const pages = ['family-history', 'symptoms', 'hand-tremor', 'voice-test', 'face-assessment', 'medical-reports', 'summary-report']
   const [currentPageIndex, setCurrentPageIndex] = useState(0)
   const currentPage = pages[currentPageIndex]
   
@@ -93,7 +94,9 @@ function App() {
       case 'face-assessment':
         return <FaceAssessmentPage onNext={handleNextPage} onPrev={handlePrevPage} isFirst={currentPageIndex === 0} isLast={currentPageIndex === pages.length - 1} />
       case 'medical-reports':
-        return <MedicalReportsPage />
+        return <MedicalReportsPage onNext={handleNextPage} onPrev={handlePrevPage} isFirst={currentPageIndex === 0} isLast={currentPageIndex === pages.length - 1} />
+      case 'summary-report':
+        return <SummaryReportPage patientId={selectedPatient?.id} patientName={`${selectedPatient?.firstName} ${selectedPatient?.lastName}`} onPrev={handlePrevPage} isFirst={currentPageIndex === 0} />
       default:
         return <FamilyHistoryPage patientId={selectedPatient?.id} onNext={handleNextPage} onPrev={handlePrevPage} isFirst={currentPageIndex === 0} isLast={currentPageIndex === pages.length - 1} onSaveSuccess={handleSaveSuccess} />
     }
