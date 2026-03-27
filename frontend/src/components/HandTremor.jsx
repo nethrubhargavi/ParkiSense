@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 
-const API_BASE = 'https://parkisense-zcub.onrender.com'
+const API_BASE = 'http://localhost:8000'
 
 function HandTremor() {
   const [cameraActive, setCameraActive] = useState(false)
@@ -168,7 +168,7 @@ function HandTremor() {
       
       if (data.status === 'success') {
         // Parse metrics from response
-        setResults({
+        const parsed = {
           tremor_strength: data.tremor_strength || 'N/A',
           tremor_frequency: data.tremor_frequency || 'N/A',
           interpretation: data.clinical_interpretation || 'Analysis complete',
@@ -176,8 +176,11 @@ function HandTremor() {
           hands_detected: data.hands_detected || 0,
           frames_analyzed: data.frames_analyzed || 0,
           status: 'success'
-        })
+        }
+        setResults(parsed)
         setStatus('Analysis complete')
+        // Persist for Summary Report
+        localStorage.setItem('lastTremorResults', JSON.stringify({ ...parsed, timestamp: new Date().toISOString() }))
       } else {
         setStatus('Analysis failed - check console')
         setResults(data)
