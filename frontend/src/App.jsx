@@ -10,29 +10,40 @@ import SymptomsTrackingPage from './pages/SymptomsTrackingPage'
 import MedicalReportsPage from './pages/MedicalReportsPage'
 import SummaryReportPage from './pages/SummaryReportPage'
 
+// Global fetch wrapper - auto logout on 401
+window.apiFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('authToken')
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      ...options.headers,
+    }
+  })
+  if (res.status === 401) {
+    localStorage.clear()
+    window.location.reload()
+  }
+  return res
+}
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [doctorInfo, setDoctorInfo] = useState(null)
-  const [currentView, setCurrentView] = useState('dashboard') // 'dashboard' or 'assessment'
+  const [currentView, setCurrentView] = useState('dashboard')
   const [selectedPatient, setSelectedPatient] = useState(null)
   
   const pages = ['family-history', 'symptoms', 'hand-tremor', 'voice-test', 'face-assessment', 'medical-reports', 'summary-report']
   const [currentPageIndex, setCurrentPageIndex] = useState(0)
   const currentPage = pages[currentPageIndex]
   
-  // Check if user is already logged in on mount
   useEffect(() => {
     const token = localStorage.getItem('authToken')
     const doctorName = localStorage.getItem('doctorName')
     const doctorId = localStorage.getItem('doctorId')
-    
     if (token && doctorName && doctorId) {
       setIsAuthenticated(true)
-      setDoctorInfo({
-        token,
-        doctorName,
-        doctorId
-      })
+      setDoctorInfo({ token, doctorName, doctorId })
     }
   }, [])
   
@@ -65,21 +76,14 @@ function App() {
   }
   
   const handleNextPage = () => {
-    if (currentPageIndex < pages.length - 1) {
-      setCurrentPageIndex(currentPageIndex + 1)
-    }
+    if (currentPageIndex < pages.length - 1) setCurrentPageIndex(currentPageIndex + 1)
   }
   
   const handlePrevPage = () => {
-    if (currentPageIndex > 0) {
-      setCurrentPageIndex(currentPageIndex - 1)
-    }
+    if (currentPageIndex > 0) setCurrentPageIndex(currentPageIndex - 1)
   }
 
-  const handleSaveSuccess = () => {
-    // Move to next page after successful save
-    handleNextPage()
-  }
+  const handleSaveSuccess = () => handleNextPage()
   
   const renderPage = () => {
     switch(currentPage) {
@@ -102,12 +106,10 @@ function App() {
     }
   }
   
-  // Show login page if not authenticated
   if (!isAuthenticated) {
     return <Login onLoginSuccess={handleLoginSuccess} />
   }
 
-  // Show assessment pages if in assessment view
   if (currentView === 'assessment' && selectedPatient) {
     return (
       <div className="app">
@@ -143,7 +145,6 @@ function App() {
     )
   }
   
-  // Show dashboard (patient management)
   return (
     <div className="app">
       <div className="dashboard-top-bar">
