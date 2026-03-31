@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 PPG Signal Analysis Report
 ===========================
 Patient: John Doe
@@ -21,3 +22,28 @@ Notes:
 - Heart rate variability is reduced, suggestive of autonomic dysfunction.
 - SpO2 consistently below 95% during recording.
 - Bradycardia noted throughout recording period.
+=======
+PPG Signal Analysis Report
+===========================
+Patient: John Doe
+Date: 2026-02-27
+Device: Clinical Pulse Oximeter v3.2
+
+Recording Duration: 5 minutes (continuous)
+
+Vital Metrics
+--------------
+Heart Rate: 52 bpm
+SpO2: 93 %
+HRV (SDNN): 15 ms
+Perfusion Index: 0.8
+RR Interval: 1154 ms
+
+Signal Quality: Good
+Waveform: Regular rhythm with occasional ectopic beats noted.
+
+Notes:
+- Heart rate variability is reduced, suggestive of autonomic dysfunction.
+- SpO2 consistently below 95% during recording.
+- Bradycardia noted throughout recording period.
+>>>>>>> ae6ffb8bbf49244eb2599dd1f532a652bf633124

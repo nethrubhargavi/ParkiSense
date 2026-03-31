@@ -75,10 +75,15 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+<<<<<<< HEAD
         "https://parki-sense.vercel.app",       # ← your production URL
         "https://parkisense.vercel.app",         # ← add any alternate spelling
     ],
     allow_origin_regex=r"https://.*\.vercel\.app",  # ← covers ALL Vercel preview URLs
+=======
+        "https://parki-sense.vercel.app",
+    ],
+>>>>>>> ae6ffb8bbf49244eb2599dd1f532a652bf633124
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
