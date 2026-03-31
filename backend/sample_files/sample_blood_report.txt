@@ -1,0 +1,53 @@
+PATIENT BLOOD TEST REPORT
+========================
+Date: 2026-02-27
+Patient: John Doe
+Lab: City Medical Diagnostics
+
+Complete Blood Count (CBC)
+--------------------------
+Hemoglobin: 10.2 g/dL
+WBC: 12.5 x10^3/uL
+RBC: 3.8 x10^6/uL
+Platelet: 180 x10^3/uL
+Hematocrit: 31 %
+MCV: 82 fL
+MCH: 27 pg
+
+Metabolic Panel
+---------------
+Glucose (Fasting): 145 mg/dL
+HbA1c: 7.2 %
+Creatinine: 1.5 mg/dL
+BUN: 28 mg/dL
+Uric Acid: 8.5 mg/dL
+Sodium: 140 mEq/L
+Potassium: 4.2 mEq/L
+Calcium: 9.5 mg/dL
+
+Lipid Profile
+-------------
+Total Cholesterol: 245 mg/dL
+LDL: 160 mg/dL
+HDL: 35 mg/dL
+Triglycerides: 210 mg/dL
+
+Liver Function
+--------------
+AST: 55 U/L
+ALT: 62 U/L
+Total Bilirubin: 0.9 mg/dL
+Albumin: 4.0 g/dL
+Total Protein: 7.0 g/dL
+
+Thyroid
+-------
+TSH: 5.5 mIU/L
+
+Others
+------
+ESR: 35 mm/hr
+CRP: 15 mg/L
+Vitamin D: 18 ng/mL
+Vitamin B12: 350 pg/mL
+Ferritin: 8 ng/mL
