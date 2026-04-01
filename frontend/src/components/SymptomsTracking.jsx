@@ -27,7 +27,6 @@ function SymptomsTracking({ patientId, onSaveSuccess }) {
   const [otherSymptomsText, setOtherSymptomsText] = useState('')
   const [progressionSpeed, setProgressionSpeed] = useState('')
   const [notes, setNotes] = useState('')
-  
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -40,48 +39,21 @@ function SymptomsTracking({ patientId, onSaveSuccess }) {
         ? prev.filter(id => id !== symptomId)
         : [...prev, symptomId]
     )
-    
     if (!selectedSymptoms.includes(symptomId)) {
-      setSymptomSeverity(prev => ({
-        ...prev,
-        [symptomId]: 5
-      }))
+      setSymptomSeverity(prev => ({ ...prev, [symptomId]: 5 }))
     }
   }
 
   const handleSeverityChange = (symptomId, value) => {
-    setSymptomSeverity(prev => ({
-      ...prev,
-      [symptomId]: parseInt(value)
-    }))
+    setSymptomSeverity(prev => ({ ...prev, [symptomId]: parseInt(value) }))
   }
 
   const validateForm = () => {
-    if (!onsetDate) {
-      setError('Please select the onset date of first symptom')
-      return false
-    }
-
-    if (new Date(onsetDate) > new Date()) {
-      setError('Onset date cannot be in the future')
-      return false
-    }
-
-    if (selectedSymptoms.length === 0) {
-      setError('Please select at least one symptom')
-      return false
-    }
-
-    if (!progressionSpeed) {
-      setError('Please select symptom progression speed')
-      return false
-    }
-
-    if (selectedSymptoms.includes('other') && !otherSymptomsText.trim()) {
-      setError('Please describe other symptoms')
-      return false
-    }
-
+    if (!onsetDate) { setError('Please select the onset date of first symptom'); return false }
+    if (new Date(onsetDate) > new Date()) { setError('Onset date cannot be in the future'); return false }
+    if (selectedSymptoms.length === 0) { setError('Please select at least one symptom'); return false }
+    if (!progressionSpeed) { setError('Please select symptom progression speed'); return false }
+    if (selectedSymptoms.includes('other') && !otherSymptomsText.trim()) { setError('Please describe other symptoms'); return false }
     return true
   }
 
@@ -89,9 +61,7 @@ function SymptomsTracking({ patientId, onSaveSuccess }) {
     e.preventDefault()
     setError('')
     setSuccess('')
-
     if (!validateForm()) return
-
     setIsLoading(true)
 
     try {
@@ -111,12 +81,9 @@ function SymptomsTracking({ patientId, onSaveSuccess }) {
         recordedAt: new Date().toISOString()
       }
 
-      const response = await fetch(`${API_BASE}/symptoms`, {
+      const response = await apiFetch(`${API_BASE}/symptoms`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
 
@@ -124,7 +91,6 @@ function SymptomsTracking({ patientId, onSaveSuccess }) {
 
       if (data.status === 'success') {
         setSuccess('Symptoms tracked successfully!')
-        
         setTimeout(() => {
           setOnsetDate('')
           setSelectedSymptoms([])
@@ -132,7 +98,6 @@ function SymptomsTracking({ patientId, onSaveSuccess }) {
           setOtherSymptomsText('')
           setProgressionSpeed('')
           setNotes('')
-          
           if (onSaveSuccess) onSaveSuccess()
         }, 1500)
       } else {
@@ -140,7 +105,7 @@ function SymptomsTracking({ patientId, onSaveSuccess }) {
       }
     } catch (error) {
       console.error('Save error:', error)
-      setError('Network error - ensure backend is running')
+      setError('Network error - could not reach the server. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -148,7 +113,119 @@ function SymptomsTracking({ patientId, onSaveSuccess }) {
 
   return (
     <div className="symptoms-tracking-container">
-      {/* UI unchanged */}
+      <div className="symptoms-header">
+        <h3>📋 Symptoms Tracking</h3>
+        <p className="subtitle">Document patient's symptoms, severity, and progression</p>
+      </div>
+
+      {error && <div className="error-banner">{error}</div>}
+      {success && <div className="success-banner">{success}</div>}
+
+      <form onSubmit={handleSave} className="symptoms-form">
+        <section className="form-section">
+          <h4>🗓️ Symptom Onset</h4>
+          <div className="form-group">
+            <label htmlFor="onset-date">Date of First Symptom *</label>
+            <input id="onset-date" type="date" value={onsetDate}
+              onChange={(e) => setOnsetDate(e.target.value)}
+              max={maxDate} required disabled={isLoading} className="date-input" />
+            <p className="help-text">Select the date when symptoms first appeared</p>
+          </div>
+        </section>
+
+        <section className="form-section">
+          <h4>✅ Symptoms Checklist (Select All That Apply)</h4>
+          <div className="symptoms-grid">
+            {SYMPTOM_OPTIONS.map(symptom => (
+              <div key={symptom.id} className="symptom-checkbox-wrapper">
+                <label className="symptom-checkbox">
+                  <input type="checkbox"
+                    checked={selectedSymptoms.includes(symptom.id)}
+                    onChange={() => handleSymptomToggle(symptom.id)}
+                    disabled={isLoading} />
+                  <span className="symptom-label">
+                    <span className="symptom-icon">{symptom.icon}</span>
+                    {symptom.label}
+                  </span>
+                </label>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {selectedSymptoms.includes('other') && (
+          <section className="form-section">
+            <h4>📝 Describe Other Symptoms</h4>
+            <div className="form-group">
+              <textarea value={otherSymptomsText}
+                onChange={(e) => setOtherSymptomsText(e.target.value)}
+                placeholder="Describe any other symptoms the patient is experiencing..."
+                rows="3" disabled={isLoading} required />
+            </div>
+          </section>
+        )}
+
+        {selectedSymptoms.length > 0 && (
+          <section className="form-section">
+            <h4>📊 Symptom Severity (0 = None, 10 = Severe)</h4>
+            <div className="severity-sliders">
+              {selectedSymptoms.map(symptomId => {
+                const symptom = SYMPTOM_OPTIONS.find(s => s.id === symptomId)
+                const severity = symptomSeverity[symptomId] || 5
+                return (
+                  <div key={symptomId} className="severity-slider-group">
+                    <div className="severity-header">
+                      <label>{symptom?.label}</label>
+                      <span className="severity-value">{severity}<span className="severity-unit">/10</span></span>
+                    </div>
+                    <div className="slider-container">
+                      <input type="range" min="0" max="10" value={severity}
+                        onChange={(e) => handleSeverityChange(symptomId, e.target.value)}
+                        disabled={isLoading} className="severity-slider" />
+                      <div className="slider-labels">
+                        <span>None</span><span>Moderate</span><span>Severe</span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
+        <section className="form-section">
+          <h4>🚀 Symptom Progression Speed</h4>
+          <div className="progression-options">
+            {PROGRESSION_OPTIONS.map(option => (
+              <label key={option.value} className="radio-option">
+                <input type="radio" name="progression" value={option.value}
+                  checked={progressionSpeed === option.value}
+                  onChange={(e) => setProgressionSpeed(e.target.value)}
+                  disabled={isLoading} />
+                <span className="radio-label">
+                  <span className="radio-icon">{option.icon}</span>
+                  {option.label}
+                </span>
+              </label>
+            ))}
+          </div>
+        </section>
+
+        <section className="form-section">
+          <h4>📌 Additional Clinical Notes</h4>
+          <div className="form-group">
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
+              placeholder="Add any additional observations, medication effects, recent changes, etc..."
+              rows="4" disabled={isLoading} />
+          </div>
+        </section>
+
+        <div className="form-actions">
+          <button type="submit" className="btn btn-primary btn-large" disabled={isLoading}>
+            {isLoading ? '⏳ Saving...' : '💾 Save Symptoms'}
+          </button>
+        </div>
+      </form>
     </div>
   )
 }
