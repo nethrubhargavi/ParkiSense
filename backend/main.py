@@ -41,6 +41,8 @@ USERS_DB = {
 
 PATIENTS_DB = {}
 ACTIVE_TOKENS = {}
+FAMILY_HISTORY_DB = {}
+SYMPTOMS_DB = {}
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -100,9 +102,13 @@ def validate_file_extension(filename: str, allowed: set):
     if ext not in allowed:
         raise HTTPException(status_code=400, detail=f"File type '{ext}' not allowed")
 
+# ==================== HEALTH CHECK ====================
+
 @app.get("/")
 def root():
     return {"status": "online"}
+
+# ==================== AUTHENTICATION ====================
 
 @app.post("/login")
 @limiter.limit("10/minute")
@@ -119,6 +125,8 @@ def login(request: Request, credentials: dict):
         "doctorName": USERS_DB[username]["name"],
         "doctorId": USERS_DB[username]["id"],
     }
+
+# ==================== PATIENT MANAGEMENT ====================
 
 @app.get("/patients")
 def get_patients(_user: str = Depends(validate_token)):
@@ -142,6 +150,55 @@ def create_patient(patient_data: dict, _user: str = Depends(validate_token)):
     PATIENTS_DB[patient_id] = patient
     return {"status": "success", "patient": patient}
 
+@app.delete("/patients/{patient_id}")
+def delete_patient(patient_id: str, _user: str = Depends(validate_token)):
+    if patient_id not in PATIENTS_DB:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    del PATIENTS_DB[patient_id]
+    return {"status": "success"}
+
+# ==================== FAMILY HISTORY ====================
+
+@app.post("/family-history")
+def save_family_history(data: dict, _user: str = Depends(validate_token)):
+    patient_id = data.get("patientId")
+    if not patient_id:
+        raise HTTPException(status_code=400, detail="patientId is required")
+    FAMILY_HISTORY_DB[patient_id] = {
+        "patientId": patient_id,
+        "hasFamilyHistory": data.get("hasFamilyHistory"),
+        "familyMembers": data.get("familyMembers", []),
+        "notes": _sanitise(data.get("notes", ""), 2000),
+        "recordedAt": data.get("recordedAt"),
+    }
+    return {"status": "success", "data": FAMILY_HISTORY_DB[patient_id]}
+
+@app.get("/family-history/{patient_id}")
+def get_family_history(patient_id: str, _user: str = Depends(validate_token)):
+    data = FAMILY_HISTORY_DB.get(patient_id)
+    if not data:
+        return {"status": "success", "data": None}
+    return {"status": "success", "data": data}
+
+# ==================== SYMPTOMS ====================
+
+@app.post("/symptoms")
+def save_symptoms(data: dict, _user: str = Depends(validate_token)):
+    patient_id = data.get("patientId")
+    if not patient_id:
+        raise HTTPException(status_code=400, detail="patientId is required")
+    SYMPTOMS_DB[patient_id] = data
+    return {"status": "success", "data": SYMPTOMS_DB[patient_id]}
+
+@app.get("/symptoms/{patient_id}")
+def get_symptoms(patient_id: str, _user: str = Depends(validate_token)):
+    data = SYMPTOMS_DB.get(patient_id)
+    if not data:
+        return {"status": "success", "data": None}
+    return {"status": "success", "data": data}
+
+# ==================== HAND TREMOR ====================
+
 ALLOWED_VIDEO_EXTS = {".webm", ".mp4", ".avi", ".mov"}
 ALLOWED_AUDIO_EXTS = {".webm", ".wav", ".mp3", ".ogg", ".m4a"}
 ALLOWED_REPORT_EXTS = {".pdf", ".png", ".jpg", ".jpeg"}
@@ -153,6 +210,8 @@ async def tremor_test_endpoint(video: UploadFile = File(...)):
     from hand_tremor_api import run_tremor_test
     return await run_tremor_test(video)
 
+# ==================== VOICE ====================
+
 @app.post("/run-voice-test")
 async def voice_test_endpoint(audio: UploadFile = File(...)):
     validate_file_extension(audio.filename, ALLOWED_AUDIO_EXTS)
@@ -160,12 +219,16 @@ async def voice_test_endpoint(audio: UploadFile = File(...)):
     from voice_api import run_voice_test
     return await run_voice_test(audio)
 
+# ==================== FACE ====================
+
 @app.post("/run-face-test")
 async def face_test_endpoint(video: UploadFile = File(...)):
     validate_file_extension(video.filename, ALLOWED_VIDEO_EXTS)
     await validate_upload_size(video)
     from face_api import run_face_test
     return await run_face_test(video)
+
+# ==================== REPORTS ====================
 
 @app.post("/reports/analyze")
 async def reports_analyze_endpoint(
@@ -179,6 +242,8 @@ async def reports_analyze_endpoint(
         await validate_upload_size(f)
     from reports_api import analyze_reports
     return await analyze_reports(files, report_type)
+
+# ==================== ENTRY POINT ====================
 
 if __name__ == "__main__":
     uvicorn.run(
