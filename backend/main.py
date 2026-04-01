@@ -1,5 +1,5 @@
 import os
-import re
+import json
 import logging
 import secrets
 from datetime import datetime
@@ -9,19 +9,17 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Request, Depends, 
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
+from sqlalchemy import create_engine, text
 
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
+# ==================== CONFIG ====================
+
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 MAX_STRING_LENGTH = 500
 ALLOWED_REPORT_TYPES = {"blood", "mri", "ppg", "general"}
-
-PATIENT_WRITABLE_FIELDS = {
-    "firstName", "lastName", "dateOfBirth",
-    "mrnNumber", "email", "notes", "doctorId",
-}
 
 logger = logging.getLogger("parkinsons_api")
 logging.basicConfig(level=logging.INFO)
@@ -39,10 +37,16 @@ USERS_DB = {
     },
 }
 
-PATIENTS_DB = {}
-ACTIVE_TOKENS = {}
-FAMILY_HISTORY_DB = {}
-SYMPTOMS_DB = {}
+# ==================== DATABASE ====================
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+engine = create_engine(DATABASE_URL)
+
+def get_db():
+    with engine.connect() as conn:
+        yield conn
+
+# ==================== APP SETUP ====================
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -55,7 +59,6 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -77,18 +80,22 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"status": "error", "message": "Internal server error"},
     )
 
+# ==================== HELPERS ====================
+
 def _sanitise(value: str, max_len: int = MAX_STRING_LENGTH):
     if not isinstance(value, str):
         return ""
     return value.strip()[:max_len]
 
-def validate_token(authorization: str = Header(default=None)):
+def validate_token(authorization: str = Header(default=None), db=Depends(get_db)):
     if not authorization:
         raise HTTPException(status_code=401, detail="Missing authorization token")
     token = authorization.replace("Bearer ", "")
-    if token not in ACTIVE_TOKENS:
+    result = db.execute(text("SELECT username FROM active_tokens WHERE token = :token"), {"token": token})
+    row = result.mappings().first()
+    if not row:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
-    return ACTIVE_TOKENS[token]
+    return row["username"]
 
 async def validate_upload_size(file: UploadFile, max_bytes: int = MAX_UPLOAD_BYTES):
     content = await file.read()
@@ -112,13 +119,22 @@ def root():
 
 @app.post("/login")
 @limiter.limit("10/minute")
-def login(request: Request, credentials: dict):
+def login(request: Request, credentials: dict, db=Depends(get_db)):
     username = _sanitise(credentials.get("username", ""))
     password = credentials.get("password", "")
     if username not in USERS_DB or USERS_DB[username]["password"] != password:
         raise HTTPException(status_code=401, detail="Invalid username or password")
     token = secrets.token_hex(32)
-    ACTIVE_TOKENS[token] = username
+    # Save token to database
+    db.execute(text("""
+        INSERT INTO active_tokens (token, username, created_at)
+        VALUES (:token, :username, :created_at)
+    """), {
+        "token": token,
+        "username": username,
+        "created_at": datetime.now(),
+    })
+    db.commit()
     return {
         "status": "success",
         "token": token,
@@ -129,73 +145,138 @@ def login(request: Request, credentials: dict):
 # ==================== PATIENT MANAGEMENT ====================
 
 @app.get("/patients")
-def get_patients(_user: str = Depends(validate_token)):
-    return {"status": "success", "patients": list(PATIENTS_DB.values())}
+def get_patients(_user: str = Depends(validate_token), db=Depends(get_db)):
+    result = db.execute(text("SELECT * FROM patients"))
+    rows = result.mappings().all()
+    patients = []
+    for row in rows:
+        patients.append({
+            "id": row["id"],
+            "firstName": row["first_name"],
+            "lastName": row["last_name"],
+            "dateOfBirth": row["date_of_birth"],
+            "mrnNumber": row["mrn_number"],
+            "email": row["email"],
+            "notes": row["notes"],
+            "doctorId": row["doctor_id"],
+            "createdAt": row["created_at"],
+            "assessments": row["assessments"] or [],
+        })
+    return {"status": "success", "patients": patients}
 
 @app.post("/patients")
-def create_patient(patient_data: dict, _user: str = Depends(validate_token)):
-    patient_id = f"patient_{len(PATIENTS_DB) + 1}_{datetime.now().timestamp()}"
-    patient = {
+def create_patient(patient_data: dict, _user: str = Depends(validate_token), db=Depends(get_db)):
+    patient_id = f"patient_{datetime.now().timestamp()}"
+    first_name = _sanitise(patient_data.get("firstName", ""))
+    last_name = _sanitise(patient_data.get("lastName", ""))
+    date_of_birth = _sanitise(patient_data.get("dateOfBirth", ""))
+    mrn_number = _sanitise(patient_data.get("mrnNumber", ""))
+    email = _sanitise(patient_data.get("email", ""))
+    notes = _sanitise(patient_data.get("notes", ""), 2000)
+    doctor_id = _sanitise(patient_data.get("doctorId", ""))
+    created_at = datetime.now().isoformat()
+
+    db.execute(text("""
+        INSERT INTO patients (id, first_name, last_name, date_of_birth, mrn_number, email, notes, doctor_id, created_at, assessments)
+        VALUES (:id, :first_name, :last_name, :date_of_birth, :mrn_number, :email, :notes, :doctor_id, :created_at, :assessments)
+    """), {
         "id": patient_id,
-        "firstName": _sanitise(patient_data.get("firstName", "")),
-        "lastName": _sanitise(patient_data.get("lastName", "")),
-        "dateOfBirth": _sanitise(patient_data.get("dateOfBirth", "")),
-        "mrnNumber": _sanitise(patient_data.get("mrnNumber", "")),
-        "email": _sanitise(patient_data.get("email", "")),
-        "notes": _sanitise(patient_data.get("notes", ""), 2000),
-        "doctorId": _sanitise(patient_data.get("doctorId", "")),
-        "createdAt": datetime.now().isoformat(),
+        "first_name": first_name,
+        "last_name": last_name,
+        "date_of_birth": date_of_birth,
+        "mrn_number": mrn_number,
+        "email": email,
+        "notes": notes,
+        "doctor_id": doctor_id,
+        "created_at": created_at,
+        "assessments": json.dumps([]),
+    })
+    db.commit()
+    return {"status": "success", "patient": {
+        "id": patient_id,
+        "firstName": first_name,
+        "lastName": last_name,
+        "dateOfBirth": date_of_birth,
+        "mrnNumber": mrn_number,
+        "email": email,
+        "notes": notes,
+        "doctorId": doctor_id,
+        "createdAt": created_at,
         "assessments": [],
-    }
-    PATIENTS_DB[patient_id] = patient
-    return {"status": "success", "patient": patient}
+    }}
 
 @app.delete("/patients/{patient_id}")
-def delete_patient(patient_id: str, _user: str = Depends(validate_token)):
-    if patient_id not in PATIENTS_DB:
+def delete_patient(patient_id: str, _user: str = Depends(validate_token), db=Depends(get_db)):
+    result = db.execute(text("DELETE FROM patients WHERE id = :id"), {"id": patient_id})
+    db.commit()
+    if result.rowcount == 0:
         raise HTTPException(status_code=404, detail="Patient not found")
-    del PATIENTS_DB[patient_id]
     return {"status": "success"}
 
 # ==================== FAMILY HISTORY ====================
 
 @app.post("/family-history")
-def save_family_history(data: dict, _user: str = Depends(validate_token)):
+def save_family_history(data: dict, _user: str = Depends(validate_token), db=Depends(get_db)):
     patient_id = data.get("patientId")
     if not patient_id:
         raise HTTPException(status_code=400, detail="patientId is required")
-    FAMILY_HISTORY_DB[patient_id] = {
-        "patientId": patient_id,
-        "hasFamilyHistory": data.get("hasFamilyHistory"),
-        "familyMembers": data.get("familyMembers", []),
+    db.execute(text("""
+        INSERT INTO family_history (patient_id, has_family_history, family_members, notes, recorded_at)
+        VALUES (:patient_id, :has_family_history, :family_members, :notes, :recorded_at)
+        ON CONFLICT (patient_id) DO UPDATE SET
+            has_family_history = EXCLUDED.has_family_history,
+            family_members = EXCLUDED.family_members,
+            notes = EXCLUDED.notes,
+            recorded_at = EXCLUDED.recorded_at
+    """), {
+        "patient_id": patient_id,
+        "has_family_history": data.get("hasFamilyHistory"),
+        "family_members": json.dumps(data.get("familyMembers", [])),
         "notes": _sanitise(data.get("notes", ""), 2000),
-        "recordedAt": data.get("recordedAt"),
-    }
-    return {"status": "success", "data": FAMILY_HISTORY_DB[patient_id]}
+        "recorded_at": data.get("recordedAt"),
+    })
+    db.commit()
+    return {"status": "success", "data": data}
 
 @app.get("/family-history/{patient_id}")
-def get_family_history(patient_id: str, _user: str = Depends(validate_token)):
-    data = FAMILY_HISTORY_DB.get(patient_id)
-    if not data:
+def get_family_history(patient_id: str, _user: str = Depends(validate_token), db=Depends(get_db)):
+    result = db.execute(text("SELECT * FROM family_history WHERE patient_id = :id"), {"id": patient_id})
+    row = result.mappings().first()
+    if not row:
         return {"status": "success", "data": None}
-    return {"status": "success", "data": data}
+    return {"status": "success", "data": {
+        "patientId": row["patient_id"],
+        "hasFamilyHistory": row["has_family_history"],
+        "familyMembers": row["family_members"] or [],
+        "notes": row["notes"],
+        "recordedAt": row["recorded_at"],
+    }}
 
 # ==================== SYMPTOMS ====================
 
 @app.post("/symptoms")
-def save_symptoms(data: dict, _user: str = Depends(validate_token)):
+def save_symptoms(data: dict, _user: str = Depends(validate_token), db=Depends(get_db)):
     patient_id = data.get("patientId")
     if not patient_id:
         raise HTTPException(status_code=400, detail="patientId is required")
-    SYMPTOMS_DB[patient_id] = data
-    return {"status": "success", "data": SYMPTOMS_DB[patient_id]}
+    db.execute(text("""
+        INSERT INTO symptoms (patient_id, data)
+        VALUES (:patient_id, :data)
+        ON CONFLICT (patient_id) DO UPDATE SET data = EXCLUDED.data
+    """), {
+        "patient_id": patient_id,
+        "data": json.dumps(data),
+    })
+    db.commit()
+    return {"status": "success", "data": data}
 
 @app.get("/symptoms/{patient_id}")
-def get_symptoms(patient_id: str, _user: str = Depends(validate_token)):
-    data = SYMPTOMS_DB.get(patient_id)
-    if not data:
+def get_symptoms(patient_id: str, _user: str = Depends(validate_token), db=Depends(get_db)):
+    result = db.execute(text("SELECT data FROM symptoms WHERE patient_id = :id"), {"id": patient_id})
+    row = result.mappings().first()
+    if not row:
         return {"status": "success", "data": None}
-    return {"status": "success", "data": data}
+    return {"status": "success", "data": row["data"]}
 
 # ==================== HAND TREMOR ====================
 
