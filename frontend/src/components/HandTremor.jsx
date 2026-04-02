@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 
-const API_BASE = 'http://localhost:8000'
+const API_BASE = 'https://parkisense-zcub.onrender.com'
 
 function HandTremor() {
   const [cameraActive, setCameraActive] = useState(false)
@@ -17,18 +17,12 @@ function HandTremor() {
   const chunksRef = useRef([])
   const timerRef = useRef(null)
   
-  // Start camera
   const startCamera = async () => {
     try {
       setStatus('Requesting camera access...')
-      
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 }
-        }
+        video: { width: { ideal: 640 }, height: { ideal: 480 } }
       })
-      
       if (videoRef.current) {
         videoRef.current.srcObject = stream
         streamRef.current = stream
@@ -41,7 +35,6 @@ function HandTremor() {
     }
   }
   
-  // Stop camera
   const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
@@ -51,33 +44,21 @@ function HandTremor() {
     }
   }
   
-  // Start video recording for analysis
   const startRecording = () => {
     if (!streamRef.current) return
-    
     try {
-      const mediaRecorder = new MediaRecorder(streamRef.current, {
-        mimeType: 'video/webm'
-      })
-      
+      const mediaRecorder = new MediaRecorder(streamRef.current, { mimeType: 'video/webm' })
       mediaRecorderRef.current = mediaRecorder
       chunksRef.current = []
       setResults(null)
       setHasRecording(false)
       
       mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunksRef.current.push(event.data)
-        }
+        if (event.data.size > 0) chunksRef.current.push(event.data)
       }
-      
       mediaRecorder.onstop = () => {
-        // Mark recording as complete after recorder stops
-        if (chunksRef.current.length > 0) {
-          setHasRecording(true)
-        }
+        if (chunksRef.current.length > 0) setHasRecording(true)
       }
-      
       mediaRecorder.onerror = (event) => {
         console.error('MediaRecorder error:', event)
         setIsRecording(false)
@@ -90,25 +71,19 @@ function HandTremor() {
       setRecordingTime(0)
       setStatus('Recording... Keep hands steady, then extend arms forward')
       
-      // Record for 10 seconds
       const recordingTimer = setInterval(() => {
         setRecordingTime(prev => {
           const newTime = prev + 1
           if (newTime >= 10) {
-            // Stop recording after 10 seconds
             clearInterval(recordingTimer)
-            if (mediaRecorder.state !== 'inactive') {
-              mediaRecorder.stop()
-            }
+            if (mediaRecorder.state !== 'inactive') mediaRecorder.stop()
             setIsRecording(false)
             setStatus('Recording stopped - ready to analyze')
           }
           return newTime
         })
       }, 1000)
-      
       timerRef.current = recordingTimer
-      
     } catch (error) {
       setStatus('Recording failed')
       console.error('Recording error:', error)
@@ -116,50 +91,35 @@ function HandTremor() {
     }
   }
   
-  // Mark recording as complete
-  const markRecordingComplete = () => {
-    if (chunksRef.current.length > 0) {
-      setHasRecording(true)
-    }
-  }
-  
-  // Stop video recording
   const stopRecording = () => {
     if (mediaRecorderRef.current) {
       try {
-        if (mediaRecorderRef.current.state !== 'inactive') {
-          mediaRecorderRef.current.stop()
-        }
+        if (mediaRecorderRef.current.state !== 'inactive') mediaRecorderRef.current.stop()
       } catch (error) {
         console.error('Error stopping recorder:', error)
       }
       setIsRecording(false)
       clearInterval(timerRef.current)
       setStatus('Recording stopped - ready to analyze')
-      markRecordingComplete()
+      if (chunksRef.current.length > 0) setHasRecording(true)
     }
   }
   
-  // Run tremor test (send recorded video to backend)
   const runTremorTest = async () => {
     if (chunksRef.current.length === 0) {
       setStatus('No recording available - please record first')
       return
     }
-    
     setIsProcessing(true)
     setStatus('Processing tremor analysis...')
     setResults(null)
     
     try {
-      // Create video blob from recorded chunks
       const videoBlob = new Blob(chunksRef.current, { type: 'video/webm' })
-      
-      // Create FormData to send video file
       const formData = new FormData()
       formData.append('video', videoBlob, 'hand_recording.webm')
       
-      const response = await fetch(`${API_BASE}/run-tremor-test`, {
+      const response = await apiFetch(`${API_BASE}/run-tremor-test`, {
         method: 'POST',
         body: formData
       })
@@ -167,7 +127,6 @@ function HandTremor() {
       const data = await response.json()
       
       if (data.status === 'success') {
-        // Parse metrics from response
         const parsed = {
           tremor_strength: data.tremor_strength || 'N/A',
           tremor_frequency: data.tremor_frequency || 'N/A',
@@ -179,27 +138,23 @@ function HandTremor() {
         }
         setResults(parsed)
         setStatus('Analysis complete')
-        // Persist for Summary Report
         localStorage.setItem('lastTremorResults', JSON.stringify({ ...parsed, timestamp: new Date().toISOString() }))
       } else {
         setStatus('Analysis failed - check console')
         setResults(data)
       }
     } catch (error) {
-      setStatus('Network error - ensure backend is running')
+      setStatus('Network error - could not reach the server')
       console.error('API error:', error)
     } finally {
       setIsProcessing(false)
     }
   }
   
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopCamera()
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-      }
+      if (timerRef.current) clearInterval(timerRef.current)
     }
   }, [])
   
@@ -214,13 +169,7 @@ function HandTremor() {
       </div>
       
       <div className="video-container">
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className="video-preview"
-        />
+        <video ref={videoRef} autoPlay playsInline muted className="video-preview" />
         {!cameraActive && (
           <div className="video-placeholder">
             <p>📹 Camera preview will appear here</p>
@@ -234,29 +183,19 @@ function HandTremor() {
       </div>
       
       <div className="status-bar">
-        <span className={`status-indicator ${isProcessing ? 'processing' : ''}`}>
-          {status}
-        </span>
+        <span className={`status-indicator ${isProcessing ? 'processing' : ''}`}>{status}</span>
       </div>
       
       <div className="controls">
         {!cameraActive ? (
-          <button onClick={startCamera} className="btn btn-primary">
-            Start Camera
-          </button>
+          <button onClick={startCamera} className="btn btn-primary">Start Camera</button>
         ) : (
           <>
-            <button onClick={stopCamera} className="btn btn-secondary">
-              Stop Camera
-            </button>
+            <button onClick={stopCamera} className="btn btn-secondary">Stop Camera</button>
             {!isRecording ? (
-              <button onClick={startRecording} className="btn btn-warning">
-                Start Recording
-              </button>
+              <button onClick={startRecording} className="btn btn-warning">Start Recording</button>
             ) : (
-              <button onClick={stopRecording} className="btn btn-danger">
-                Stop Recording
-              </button>
+              <button onClick={stopRecording} className="btn btn-danger">Stop Recording</button>
             )}
           </>
         )}
@@ -264,11 +203,7 @@ function HandTremor() {
       
       {hasRecording && (
         <div className="analysis-section">
-          <button 
-            onClick={runTremorTest} 
-            className="btn btn-success btn-large"
-            disabled={isProcessing}
-          >
+          <button onClick={runTremorTest} className="btn btn-success btn-large" disabled={isProcessing}>
             {isProcessing ? '⏳ Processing...' : '▶ Run Tremor Test'}
           </button>
         </div>
@@ -277,7 +212,6 @@ function HandTremor() {
       {results && (
         <div className="results-panel">
           <h4>Results</h4>
-
           {results.status === 'success' ? (
             <div className="results-content">
               <div className="metric-grid">
@@ -298,13 +232,9 @@ function HandTremor() {
                   <span className="metric-value">{results.hands_detected}</span>
                 </div>
               </div>
-
               <div className="interpretation-box">
                 <p><strong>Assessment:</strong> {results.interpretation}</p>
               </div>
-
-              {/* Full raw response removed for privacy/clean UI */}
-
               <div className="graph-placeholder">
                 <p>📊 Tremor frequency graph placeholder</p>
                 <p className="note">Graph visualization available in extended version</p>
