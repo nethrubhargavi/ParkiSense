@@ -1,14 +1,28 @@
 fastapi==0.109.0
 uvicorn==0.27.0
-mediapipe==0.10.30
-opencv-python==4.9.0.80
+
+# ✅ FIXED mediapipe version
+mediapipe==0.10.9
+
+# ✅ Use headless for servers (important for Render)
+opencv-python-headless==4.9.0.80
+
 numpy==1.26.3
+
+# audio libs (optional but fine)
 librosa==0.10.1
 soundfile==0.12.1
+
 python-multipart==0.0.6
+
+# utilities
 PyPDF2
 pytesseract
 Pillow
+
+# rate limiting
 slowapi
+
+# database
 sqlalchemy
 psycopg2-binary
