@@ -1,15 +1,14 @@
 fastapi==0.109.0
 uvicorn==0.27.0
 
-# ✅ FIXED mediapipe version
-mediapipe==0.10.9
+mediapipe==0.10.14
 
-# ✅ Use headless for servers (important for Render)
+# Use headless for servers (important for Render)
 opencv-python-headless==4.9.0.80
 
 numpy==1.26.3
 
-# audio libs (optional but fine)
+# audio libs
 librosa==0.10.1
 soundfile==0.12.1
 
