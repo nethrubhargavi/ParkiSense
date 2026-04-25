@@ -183,8 +183,9 @@ def register(request: Request, data: dict, db=Depends(get_db)):
 # ==================== PATIENT MANAGEMENT ====================
 
 @app.get("/patients")
-def get_patients(_user: str = Depends(validate_token), db=Depends(get_db)):
-    result = db.execute(text("SELECT * FROM patients"))
+def get_patients(user: str = Depends(validate_token), db=Depends(get_db)):
+    doctor_id = USERS_DB.get(user, {}).get("id")
+    result = db.execute(text("SELECT * FROM patients WHERE doctor_id = :doctor_id"), {"doctor_id": doctor_id})
     rows = result.mappings().all()
     patients = []
     for row in rows:
