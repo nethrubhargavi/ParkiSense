@@ -125,7 +125,6 @@ def login(request: Request, credentials: dict, db=Depends(get_db)):
     if username not in USERS_DB or USERS_DB[username]["password"] != password:
         raise HTTPException(status_code=401, detail="Invalid username or password")
     token = secrets.token_hex(32)
-    # Save token to database
     db.execute(text("""
         INSERT INTO active_tokens (token, username, created_at)
         VALUES (:token, :username, :created_at)
@@ -140,6 +139,45 @@ def login(request: Request, credentials: dict, db=Depends(get_db)):
         "token": token,
         "doctorName": USERS_DB[username]["name"],
         "doctorId": USERS_DB[username]["id"],
+    }
+
+@app.post("/register")
+@limiter.limit("5/minute")
+def register(request: Request, data: dict, db=Depends(get_db)):
+    username = _sanitise(data.get("username", ""))
+    password = data.get("password", "")
+    full_name = _sanitise(data.get("fullName", ""))
+
+    if not username or not password or not full_name:
+        raise HTTPException(status_code=400, detail="username, password, and fullName are required")
+    if len(password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    if username in USERS_DB:
+        raise HTTPException(status_code=409, detail="Username already exists")
+
+    doctor_id = f"doc-{secrets.token_hex(4)}"
+    USERS_DB[username] = {
+        "password": password,
+        "name": full_name,
+        "id": doctor_id,
+    }
+
+    token = secrets.token_hex(32)
+    db.execute(text("""
+        INSERT INTO active_tokens (token, username, created_at)
+        VALUES (:token, :username, :created_at)
+    """), {
+        "token": token,
+        "username": username,
+        "created_at": datetime.now(),
+    })
+    db.commit()
+
+    return {
+        "status": "success",
+        "token": token,
+        "doctorName": full_name,
+        "doctorId": doctor_id,
     }
 
 # ==================== PATIENT MANAGEMENT ====================
