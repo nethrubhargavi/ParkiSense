@@ -73,7 +73,7 @@ function Login({ onLoginSuccess, onGoToSignup }) {
             <button
               type="button"
               onClick={onGoToSignup}
-              className="link-button"
+              className="signup-link-btn"
               disabled={isLoading}
             >
               Sign up

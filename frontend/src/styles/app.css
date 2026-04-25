@@ -181,6 +181,29 @@ body {
   margin: 0.3rem 0;
 }
 
+.signup-link-btn {
+  background: none;
+  border: none;
+  outline: none;
+  color: #6c63ff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.signup-link-btn:hover {
+  color: #4a41d0;
+  text-decoration: underline;
+}
+
+.signup-link-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Physical Exam Page */
 .physical-exam-page {
   width: 100%;
