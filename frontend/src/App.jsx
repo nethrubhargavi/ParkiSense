@@ -32,6 +32,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [doctorInfo, setDoctorInfo] = useState(null)
   const [currentView, setCurrentView] = useState('dashboard')
+  const [authView, setAuthView] = useState('login') // 'login' | 'signup'
   const [selectedPatient, setSelectedPatient] = useState(null)
   
   const pages = ['family-history', 'symptoms', 'hand-tremor', 'voice-test', 'face-assessment', 'medical-reports', 'summary-report']
@@ -52,6 +53,7 @@ function App() {
     setIsAuthenticated(true)
     setDoctorInfo(info)
     setCurrentView('dashboard')
+    setAuthView('login')
   }
   
   const handleLogout = () => {
@@ -62,6 +64,7 @@ function App() {
     setDoctorInfo(null)
     setCurrentView('dashboard')
     setSelectedPatient(null)
+    setAuthView('login')
   }
   
   const handleStartAssessment = (patient) => {
@@ -107,8 +110,22 @@ function App() {
     }
   }
   
+  // Show login or signup based on authView
   if (!isAuthenticated) {
-    return <Login onLoginSuccess={handleLoginSuccess} />
+    if (authView === 'signup') {
+      return (
+        <Signup
+          onSignupSuccess={handleLoginSuccess}
+          onGoToLogin={() => setAuthView('login')}
+        />
+      )
+    }
+    return (
+      <Login
+        onLoginSuccess={handleLoginSuccess}
+        onGoToSignup={() => setAuthView('signup')}
+      />
+    )
   }
 
   if (currentView === 'assessment' && selectedPatient) {
