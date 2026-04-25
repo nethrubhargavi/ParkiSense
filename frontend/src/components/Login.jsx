@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 
 const API_BASE = 'https://parkisense-zcub.onrender.com'
 
-function Login({ onLoginSuccess }) {
+function Login({ onLoginSuccess, onGoToSignup }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -39,32 +39,6 @@ function Login({ onLoginSuccess }) {
     }
   }
 
-  const handleDemoLogin = async () => {
-    setError('')
-    setIsLoading(true)
-    try {
-      const response = await fetch(`${API_BASE}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: 'admin', password: 'admin123' })
-      })
-      const data = await response.json()
-      if (!response.ok) {
-        setError(data.detail || 'Demo login failed')
-        return
-      }
-      localStorage.setItem('authToken', data.token)
-      localStorage.setItem('doctorName', data.doctorName)
-      localStorage.setItem('doctorId', data.doctorId)
-      onLoginSuccess({ token: data.token, doctorName: data.doctorName, doctorId: data.doctorId })
-    } catch (err) {
-      console.error('Demo login error:', err)
-      setError('Network error - ensure backend is running')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   return (
     <div className="login-container">
       <div className="login-card">
@@ -93,16 +67,18 @@ function Login({ onLoginSuccess }) {
           </button>
         </form>
 
-        <div className="demo-section">
-          <p className="demo-text">Demo credentials: admin / admin123</p>
-          <button type="button" onClick={handleDemoLogin}
-            className="btn btn-secondary btn-demo" disabled={isLoading}>
-            📝 Continue with Demo
-          </button>
-        </div>
-
         <div className="login-footer">
-          <p className="info">Use the demo button or enter valid credentials</p>
+          <p className="info">
+            Don't have an account?{' '}
+            <button
+              type="button"
+              onClick={onGoToSignup}
+              className="link-button"
+              disabled={isLoading}
+            >
+              Sign up
+            </button>
+          </p>
           <p className="version">Parkinson's Assessment v1.0</p>
         </div>
       </div>
